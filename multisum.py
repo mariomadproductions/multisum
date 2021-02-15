@@ -41,10 +41,10 @@ format_strings={
 '\n']
 }
 
-def print_format_string(hasher,output_format,part):
+def print_format_string(filename,size,hasher,output_format,part):
     print(format_strings[output_format][part].format(
-            filename='TODO',
-            size='TODO',
+            filename=filename,
+            size=size,
             crc32=hasher.HEX(rhash.CRC32),
             md5=hasher.HEX(rhash.MD5),
             sha1=hasher.HEX(rhash.SHA1),
@@ -58,11 +58,13 @@ def main(arguments):
     else:
         output_format = 'plain'
     for file in arguments['FILE']:
+        filename = Path(file).name
+        size = Path(file).stat().st_size
         hasher.update_file(file)
-        print_format_string(hasher,output_format,0)
-        print_format_string(hasher,output_format,1)
-        print_format_string(hasher,output_format,2)
-    print_format_string(hasher,output_format,3)
+        print_format_string(filename,size,hasher,output_format,0)
+        print_format_string(filename,size,hasher,output_format,1)
+        print_format_string(filename,size,hasher,output_format,2)
+    print_format_string(filename,size,hasher,output_format,3)
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='multisum.py')
