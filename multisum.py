@@ -33,7 +33,7 @@ format_strings={
 'xml': \
 ['<game name="{filename}">\n',
 
-'<rom name="{filename}" size="{size}" crc="{crc32}" md5="{md5} '
+'<rom name="{filename}" size="{size}" crc="{crc32}" md5="{md5}" '
 'sha1="{sha1}" sha256="{sha256}"/>\n',
  
 '</game>\n',
