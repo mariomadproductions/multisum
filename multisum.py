@@ -18,7 +18,8 @@ Options:
 
 """
 from docopt import docopt
-import rhash
+from zlib import crc32
+from hashlib import sha1, sha256, md5
 from pathlib import Path
 
 format_strings={
@@ -63,27 +64,50 @@ format_strings={
 ],
 }
 
-def print_format_string(filename,size,hasher,output_format,part):
+
+#This function is based on one by Icyelut
+def hash_file(file_path):
+    calculated_crc32 = 0
+    calculated_md5 = md5()
+    calculated_sha1 = sha1()
+    calculated_sha256 = sha256()
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(65536)
+            if not data:
+                break
+            calculated_crc32 = crc32(data, calculated_crc32)
+            calculated_md5.update(data)
+            calculated_sha1.update(data)
+            calculated_sha256.update(data)
+
+    output_crc32 = ("%08X" % (calculated_crc32 & 0xffffffff)).upper()
+    output_md5 = calculated_md5.hexdigest().upper()
+    output_sha1 = calculated_sha1.hexdigest().upper()
+    output_sha256 = calculated_sha256.hexdigest().upper()
+    
+    return output_crc32, output_md5, output_sha1, output_sha256
+
+def print_format_string(filename,size,hashes,output_format,part):
     print(format_strings[output_format][part].format(
             filename=filename,
             size=size,
-            crc32=hasher.HEX(rhash.CRC32),
-            md5=hasher.HEX(rhash.MD5),
-            sha1=hasher.HEX(rhash.SHA1),
-            sha256=hasher.HEX(rhash.SHA256)
+            crc32=hashes[0],
+            md5=hashes[1],
+            sha1=hashes[2],
+            sha256=hashes[3]
             ),end='')
 
 def main(arguments):
-    hasher = rhash.RHash(rhash.CRC32 | rhash.MD5 | rhash.SHA1 | rhash.SHA256)
     output_format = arguments['--format']
     for file in arguments['<file>']:
         filename = Path(file).name
         size = Path(file).stat().st_size
-        hasher.update_file(file)
-        print_format_string(filename,size,hasher,output_format,0)
-        print_format_string(filename,size,hasher,output_format,1)
-        print_format_string(filename,size,hasher,output_format,2)
-    print_format_string(filename,size,hasher,output_format,3)
+        hashes = hash_file(file)
+        print_format_string(filename,size,hashes,output_format,0)
+        print_format_string(filename,size,hashes,output_format,1)
+        print_format_string(filename,size,hashes,output_format,2)
+    print_format_string(filename,size,hashes,output_format,3)
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='multisum.py')
